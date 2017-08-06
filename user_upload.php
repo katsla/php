@@ -40,7 +40,7 @@ try {
 
  }
 
- echo "Server have been connected. \n";
+ echo "\nServer has been connected. \n\n";
 
 // to remove the first line
 fgetcsv($handle);
@@ -65,7 +65,7 @@ while (($data = fgetcsv($handle)) !== FALSE ) {
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
-	 	echo "Email: $email is not valid. Row will not be added to DB.\n";
+	 	echo "Email $email is not valid. Row will not be added to DB.\n";
 		continue;
 
 	}
@@ -74,12 +74,16 @@ while (($data = fgetcsv($handle)) !== FALSE ) {
 
         echo $name.", ".$surname.", ".$email,"\n";
 
+        
+
         $con -> exec("INSERT INTO $dbtable (name, surname, email) VALUES ('$name', '$surname', '$email');");
 	
 	
 
 
 }
+
+$conn = null;
 
 fclose($handle);
 
