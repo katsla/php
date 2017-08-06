@@ -1,38 +1,101 @@
 <?php 
 
-$dbhost = "localhost";
-$dbname = "Test";
-$dbtable = "Users";
-$dbuser = "root";
-$dbpsswd = "root";
-$fieldseparator = ","; 
-$lineseparator = "\n";
-$csvfile = "users.csv";
+/* -------------------------
+Set defaults
+----------------------------*/
+
+require 'config.php';
+
+$con = null;
+$db_connect = true;
+
+/* -------------------------
+Set opts
+----------------------------*/
+
+$help = "
+some help here
+";
+
+$shortopts = "h:p:u:";
+$longopts = array(
+    "file:",
+    "create_table",
+    "dry_run",
+    "help",
+);
+
+$opts = getopt($shortopts, $longopts);
+
+if ( empty($opts) ) { echo "Process the script with default settings. Check 'config.php'.\n\n"; }
+
+foreach (array_keys($opts) as $opt) switch ($opt) {
+
+    case 'help':
+        die($help);
+    case 'file':
+        $csvfile = $opts['file'];
+    case 'dry_run':
+        $db_connect = false;
+        break;
+    case 'h':
+        $dbhost = $opts['h'];
+    case 'p':
+        $dbpsswd = $opts['p'];
+    case 'u':
+        $dbuser = $opts['u'];
+}
+
+connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
+create_table('Table', $con);
+
+file_exists($csvfile) or die("CSV file not found.\n");
+
+if ($db_connect) { 
+
+    connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
+}
+
+process_csv($csvfile, $db_connect);
 
 $con = null;
 
-if (!file_exists($csvfile)) {
 
-    die("CSV file not found.\n");
-}
-
-
-// connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
-
-process_csv($csvfile);
+/* -------------------------
+Functions
+----------------------------*/
 
 function connect_db($dbhost, $dbname, $dbuser, $dbpsswd) {
+
     global $con;
 
     try {
         $con = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpsswd, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
     }
     catch (PDOException $e) {
-        die("DB connection failed: ".$e->getMessage());
+        die("DB connection failed: ".$e->getMessage()."\n");
     }
 
     echo "\nConnected to server.\n\n";
 }
+
+//function create_table($dbtable, $con) {
+
+//    $check = $con->prepare("SHOW TABLES LIKE :tablename");
+//    $check->bindValue(':tablename', $dbtable);
+//    $check->execute();
+//    $table = $check->fetch(PDO::FETCH_NUM);
+
+//    if (!empty($table)) {
+
+//        echo "The table is exist. Are you sure you want to drop it? (Yes or No=default): ";
+//        $handle = fopen('php://stdin', 'r');
+//        $line = fget($handle);
+//        $line = trim($line);
+//        $line = strtolower($line);
+//        fclose($handle);
+//    }
+//}
 
 function insert_value($name, $surname, $email) {
 
@@ -45,7 +108,7 @@ function insert_value($name, $surname, $email) {
     $ins->execute();
 }
 
-function process_csv($csvfile, $db_connect = false) {
+function process_csv($csvfile, $db_connect ) {
 
     ini_set('auto_detect_line_endings', true);
 
@@ -91,8 +154,6 @@ function process_csv($csvfile, $db_connect = false) {
     }
 
     fclose($handle);
-
-    if ($db_connect) { $con = null; }
 
 }
 
