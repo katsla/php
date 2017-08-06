@@ -26,6 +26,22 @@ if (!$handle) {
 
 }
 
+// try to connect to DB
+
+try {
+
+	$con = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpsswd, array(PDO::MYSQL_ATTR_LOCAL_INFILE => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+     
+
+ }
+ catch (PDOException $e) {
+
+         die("DB connection failed: ".$e->getMessage());
+
+ }
+
+ echo "Server have been connected. \n";
+
 // to remove the first line
 fgetcsv($handle);
 
@@ -41,7 +57,7 @@ while (($data = fgetcsv($handle)) !== FALSE ) {
         
         $surname = preg_replace_callback("/^O\'([a-z])/", function($match) { return strtoupper("$match[0]"); }, $surname);
 
-	$email = strtolower(ltrim(rtrim($data[2], $charlist)));
+	$email = strtolower($data[2]);
 
         echo $name.", ".$surname.", ".$email,"\n";
 	
@@ -52,19 +68,6 @@ while (($data = fgetcsv($handle)) !== FALSE ) {
 
 fclose($handle);
 
-// try {
-
-// 	$con = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpsswd, array(PDO::MYSQL_ATTR_LOCAL_INFILE => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
-     
-
-// }
-// catch (PDOException $e) {
-
-//         die("DB connection failed: ".$e->getMessage());
-
-// }
-
-// echo "Server have been connected. \n";
 
 // $loaded = $con -> exec("LOAD DATA LOCAL INFILE ".$con->quote($csvfile)." INTO TABLE `$dbtable` FIELDS TERMINATED BY ".$con->quote($fieldseparator)." LINES TERMINATED BY ".$con->quote($lineseparator)." IGNORE 1 LINES (name, surname, email)");
 
