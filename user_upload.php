@@ -9,6 +9,7 @@ $fieldseparator = ",";
 $lineseparator = "\n";
 $csvfile = "users.csv";
 
+$con = null;
 
 if (!file_exists($csvfile)) {
 
@@ -16,7 +17,7 @@ if (!file_exists($csvfile)) {
 }
 
 
-
+// connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
 
 process_csv($csvfile);
 
@@ -46,11 +47,10 @@ function insert_value($name, $surname, $email) {
 
 function process_csv($csvfile, $db_connect = false) {
 
-    global $con;
-
     ini_set('auto_detect_line_endings', true);
 
     $handle = fopen($csvfile, 'r') or die("Could not open the data file.\n");
+
     fgetcsv($handle) or die("Incorrect CSV file!\n");
 
     while (($data = fgetcsv($handle)) !== FALSE ) {
@@ -65,7 +65,7 @@ function process_csv($csvfile, $db_connect = false) {
         $name = ucwords($data[0]);
         $surname = ucwords($data[1]);
 
-        $surname = preg_replace_callback("/^O\'([a-z])/", function($match) { return strtoupper("$match[0]"); }, $surname);
+        $surname = preg_replace_callback("/^O\'([a-z])/", "upletter", $surname);
 
         $email = filter_var($data[2], FILTER_SANITIZE_EMAIL);
 
@@ -79,6 +79,7 @@ function process_csv($csvfile, $db_connect = false) {
     
             try { 
                 insert_value($name, $surname, $email);
+                echo "Inserted row: $name, $surname, $email.\n";
             }
             catch (PDOException $e) {
                 echo "DB insert failed: ".$e->getMessage();
@@ -93,6 +94,11 @@ function process_csv($csvfile, $db_connect = false) {
 
     if ($db_connect) { $con = null; }
 
+}
+
+function upletter($match) {
+
+    return strtoupper("$match[0]");
 }
 
 ?>
