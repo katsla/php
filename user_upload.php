@@ -57,9 +57,24 @@ while (($data = fgetcsv($handle)) !== FALSE ) {
         
         $surname = preg_replace_callback("/^O\'([a-z])/", function($match) { return strtoupper("$match[0]"); }, $surname);
 
+        $surname = str_replace("'", "\'", $surname);
+
 	$email = strtolower($data[2]);
 
+	$email = filter_var($email, FILTER_SANITIZE_EMAIL);
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+
+	 	echo "Email: $email is not valid. Row will not be added to DB.\n";
+		continue;
+
+	}
+
+	$email = str_replace("'", "\'", $email);
+
         echo $name.", ".$surname.", ".$email,"\n";
+
+        $con -> exec("INSERT INTO $dbtable (name, surname, email) VALUES ('$name', '$surname', '$email');");
 	
 	
 
