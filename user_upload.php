@@ -46,8 +46,8 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
         $dbuser = $opts['u'];
 }
 
-connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
-create_table('Table', $con);
+// connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
+// create_table('Table', $con);
 
 file_exists($csvfile) or die("CSV file not found.\n");
 
