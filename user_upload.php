@@ -28,7 +28,7 @@ if (!$handle) {
 
 try {
 
-    $con = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpsswd, array(PDO::MYSQL_ATTR_LOCAL_INFILE => true, PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
+    $con = new PDO("mysql:host=$dbhost;dbname=$dbname", $dbuser, $dbpsswd, array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION));
 }
 catch (PDOException $e) {
 
@@ -37,18 +37,16 @@ catch (PDOException $e) {
 
 echo "\nConnected to server.\n\n";
 
-// to remove the first line
-fgetcsv($handle);
+fgetcsv($handle); // ignore the first line
 
 while (($data = fgetcsv($handle)) !== FALSE ) {
 
     $charlist = " \t\n\r\0..\x40\x5B..\x60\x7B..\x7F";
 
     $name = ucwords(strtolower(trim($data[0], $charlist)));
-    $surname = ucwords(strtolower(trim($data[1], $charlist)));
 
-    $surname = preg_replace_callback("/^O\'([a-z])/", function($match) { return strtoupper("$match[0]"); }, $surname);
-    $surname = str_replace("'", "\'", $surname);
+    $surname = ucwords(strtolower(trim($data[1], $charlist)));
+    $surname = preg_replace_callback("/^O\'([a-z])/", function($match) { return strtoupper("$match[0]"); }, $surname); //processing O'Hara etc.
 
     $email = strtolower($data[2]);
     $email = filter_var($email, FILTER_SANITIZE_EMAIL);
@@ -58,8 +56,6 @@ while (($data = fgetcsv($handle)) !== FALSE ) {
         echo "Email $email is not valid. Row will not be added to DB.\n";
         continue;
     }
-
-    $email = str_replace("'", "\'", $email);
 
     echo $name.", ".$surname.", ".$email,"\n";
 
@@ -79,7 +75,6 @@ function insert_value($name, $surname, $email) {
     $ins->bindValue(':surname', $surname);
     $ins->bindValue(':email', $email);
     $ins->execute();
-
 }
 
 
