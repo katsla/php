@@ -34,7 +34,7 @@ Example:
 
 ";
 
-$shortopts = "h:p:u:";
+$shortopts = "h:p:u:n:";
 $longopts = array(
     "file:",
     "create_table",
@@ -57,11 +57,13 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
         $connection = [ "dry_run" => true, "connect" => [] ];
         break;
     case 'h':
-        $db['host'] = $opts['h'];
+        $connection["connect"]["host"] = $opts['h'];
+    case 'n':
+        $connection["connect"]["name"] = $opts['n'] ?? $connection["connect"]["name"];
     case "p":
-        $db['psswd'] = $opts["p"] ?? $db['psswd'];
+        $connection["connect"]["user"] = $opts["p"] ?? $connection["connect"]["user"];
     case 'u':
-        $db['user'] = $opts['u'] ?? $db['user'];
+        $connection["connect"]["psswd"] = $opts['u'] ?? $connection["connect"]["psswd"];
 }
 
 if ( empty($opts) ) { echo "Processing the script with default settings. Check 'config.php'.\n\n"; }
