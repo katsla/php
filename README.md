@@ -54,4 +54,8 @@ Unfortunately, on this stage of development the file has not been encrypted, so 
 * Add a secure way to put the table name into a variable.
 * Move options to a function.
 * Add encryption to a config file.
+* Install php7.0-mysql пакет.
+* Add support to dry_run with uniqueness check (transaction rollback).
+* Rewrite in OOP-style.
+* Add unit tests.
 
