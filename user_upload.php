@@ -32,11 +32,6 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
     case 'help':
         exit($help_message);
     case 'create_table':
-        if (!empty($opts["create_table"])) {
-            $dbtable = $opts["create_table"];
-        }
-
-        echo "table $dbtable\n";
         $new_table = true;
         break;
     case 'file':
@@ -57,7 +52,9 @@ if ( empty($opts) ) { echo "Processing the script with default settings. Check '
 if ($new_table) {
 
     connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
-    create_table($dbtable);
+    create_table();
+    $con = null;
+    exit("Table was created successfully.\n");
 }
 
 file_exists($csvfile) or die("CSV file not found.\n");
@@ -92,12 +89,11 @@ function connect_db($dbhost, $dbname, $dbuser, $dbpsswd) {
     echo "\nConnected to server.\n\n";
 }
 
-function create_table($dbtable) {
+function create_table() {
 
     global $con;
 
-    $check = $con->prepare("SHOW TABLES LIKE :tablename;");
-    $check->bindValue(':tablename', $dbtable);
+    $check = $con->prepare("SHOW TABLES LIKE 'users'");
     $check->execute();
     $table = $check->fetch(PDO::FETCH_NUM);
 
@@ -108,22 +104,18 @@ function create_table($dbtable) {
     }
 
     $query = "
-    DROP TABLE IF EXISTS :tablename;
-    create table :tablename (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), email VARCHAR(255) NOT NULL UNIQUE);
+    DROP TABLE IF EXISTS users;
+    create table users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), email VARCHAR(255) NOT NULL UNIQUE);
     ";
 
     try {
 
-        $create = $con->prepare($query);
-        $create->bindValue(':tablename', $dbtable);
-        $create->execute();       
+        $create = $con->exec($query);
     }
     catch (PDOException $e) {
         $con = null;
-        die("DB create table '$dbtable' failed: ".$e->getMessage()."\n");
+        die("DB create table 'users' failed: ".$e->getMessage()."\n");
     }
-
-    exit("Table was created successfully.\n");
 }
 
 function check_exit($table) {
@@ -135,16 +127,16 @@ function check_exit($table) {
         $line = strtolower($line);
 
         fclose($handle);
-        if ( $line == 'y' ) { return false;  }
+        if ( $line == 'y' ) { return true;  }
     }
-    return true;
+    return false;
 }
 
 function insert_value($first_name, $last_name, $email) {
 
-    global $con, $dbtable;
+    global $con;
 
-    $ins = $con->prepare("INSERT INTO $dbtable (name, surname, email) VALUES (:name, :surname, :email);");
+    $ins = $con->prepare("INSERT INTO users (name, surname, email) VALUES (:name, :surname, :email);");
     $ins->bindValue(':name', $first_name);
     $ins->bindValue(':surname', $last_name);
     $ins->bindValue(':email', $email);
