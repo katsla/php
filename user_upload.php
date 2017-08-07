@@ -25,15 +25,18 @@ $longopts = array(
 );
 
 $opts = getopt($shortopts, $longopts);
+var_dump($opts);
 
 foreach (array_keys($opts) as $opt) switch ($opt) {
 
     case 'help':
         exit($help_message);
     case 'create_table':
-        if (!empty($opts['create_table'])) {
-            $dbtable = $opts['create_table'];
+        if (!empty($opts["create_table"])) {
+            $dbtable = $opts["create_table"];
         }
+
+        echo "table $dbtable\n";
         $new_table = true;
         break;
     case 'file':
@@ -93,33 +96,27 @@ function create_table($dbtable) {
 
     global $con;
 
-    $check = $con->prepare("SHOW TABLES LIKE '$dbtable';");
+    $check = $con->prepare("SHOW TABLES LIKE :tablename;");
+    $check->bindValue(':tablename', $dbtable);
     $check->execute();
     $table = $check->fetch(PDO::FETCH_NUM);
 
-    $test = check_exit($table);
-
     if (check_exit($table)) { 
-
-        echo "I am inside check_exit\n";
 
         $con = null;
         exit("Connection was closed.\n"); 
     }
 
     $query = "
-    DROP TABLE IF EXISTS $dbtable;
-    create table $dbtable (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), email VARCHAR(255) NOT NULL UNIQUE);
+    DROP TABLE IF EXISTS :tablename;
+    create table :tablename (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(50), surname VARCHAR(50), email VARCHAR(255) NOT NULL UNIQUE);
     ";
 
     try {
 
-        echo "I have to try\n";
         $create = $con->prepare($query);
-        $check->bindValue(':tablename', $dbtable);
-        $check->execute();
-
-        
+        $create->bindValue(':tablename', $dbtable);
+        $create->execute();       
     }
     catch (PDOException $e) {
         $con = null;
@@ -132,20 +129,15 @@ function create_table($dbtable) {
 function check_exit($table) {
     if (!empty($table)) {
 
-        echo "The table exists. Are you sure you want to drop it? (Yes or No=default): ";
+        echo "The table exists. Are you sure you want to drop it? (y/N): ";
         $handle = fopen('php://stdin', 'r');
         $line = fgetc($handle);
         $line = strtolower($line);
 
-        echo "Line is ".(string)$line."\n";
-
         fclose($handle);
+        if ( $line == 'y' ) { return false;  }
     }
-    if ( $line = 'y' ) { 
-        return false; 
-    } else {
-        return true;
-    }
+    return true;
 }
 
 function insert_value($first_name, $last_name, $email) {
