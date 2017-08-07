@@ -68,7 +68,7 @@ process_csv($csvfile, $dry_run);
 
 $con = null;
 
-echo "Status: success\n\n";
+echo "Status: completed\n\n";
 
 
 /* -------------------------
@@ -198,7 +198,7 @@ function process_csv($csvfile, $dry_run ) {
 
                 if ($code == '42S02' || $code == 'HY000') { die("Error: ".$e->getMessage()."\n"); }; //Table doesn't exist or read-only
 
-                fwrite(STDOUT, "DB insert failed on row $row_num: ".$e->getMessage(),"\n");
+                fwrite(STDOUT, "DB insert failed on row $row_num: ".$e->getMessage()."\n");
             }
         } else {
 
