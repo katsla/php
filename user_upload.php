@@ -1,19 +1,17 @@
-<?php 
+#!/usr/bin/env  php 
 
-/* -------------------------
-Set defaults
-----------------------------*/
+<?php 
 
 require 'config.php';
 
 $con = null;
-$db_connect = true;
+$dry_run = false;
 
 /* -------------------------
 Set opts
 ----------------------------*/
 
-$help = "
+$help_message = "
 some help here
 ";
 
@@ -32,11 +30,11 @@ if ( empty($opts) ) { echo "Process the script with default settings. Check 'con
 foreach (array_keys($opts) as $opt) switch ($opt) {
 
     case 'help':
-        die($help);
+        exit($help_message);
     case 'file':
         $csvfile = $opts['file'];
     case 'dry_run':
-        $db_connect = false;
+        $dry_run = true;
         break;
     case 'h':
         $dbhost = $opts['h'];
@@ -51,12 +49,12 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
 
 file_exists($csvfile) or die("CSV file not found.\n");
 
-if ($db_connect) { 
+if (!$dry_run) { 
 
     connect_db($dbhost, $dbname, $dbuser, $dbpsswd);
 }
 
-process_csv($csvfile, $db_connect);
+process_csv($csvfile, $dry_run);
 
 $con = null;
 
@@ -97,18 +95,18 @@ function connect_db($dbhost, $dbname, $dbuser, $dbpsswd) {
 //    }
 //}
 
-function insert_value($name, $surname, $email) {
+function insert_value($first_name, $last_name, $email) {
 
     global $con, $dbtable;
 
     $ins = $con->prepare("INSERT INTO $dbtable (name, surname, email) VALUES (:name, :surname, :email);");
-    $ins->bindValue(':name', $name);
-    $ins->bindValue(':surname', $surname);
+    $ins->bindValue(':name', $first_name);
+    $ins->bindValue(':surname', $last_name);
     $ins->bindValue(':email', $email);
     $ins->execute();
 }
 
-function process_csv($csvfile, $db_connect ) {
+function process_csv($csvfile, $dry_run ) {
 
     ini_set('auto_detect_line_endings', true);
 
@@ -118,17 +116,12 @@ function process_csv($csvfile, $db_connect ) {
 
     while (($data = fgetcsv($handle)) !== FALSE ) {
 
-        $charlist = " \t\n\r\0..\x40\x5B..\x60\x7B..\x7F"; // list of invalid characters
-
-        $data[0] = trim($data[0], $charlist);
-        $data[1] = trim($data[1], $charlist);
-
         $data = array_map('strtolower', $data);
 
-        $name = ucwords($data[0]);
-        $surname = ucwords($data[1]);
+        $first_name = clean_string($data[0]);
+        $last_name = clean_string($data[1]);
 
-        $surname = preg_replace_callback("/^O\'([a-z])/", "upletter", $surname);
+        $last_name = preg_replace_callback("/^O\'([a-z])/", "capitalize_letter", $last_name); //
 
         $email = filter_var($data[2], FILTER_SANITIZE_EMAIL);
 
@@ -138,18 +131,18 @@ function process_csv($csvfile, $db_connect ) {
             continue;
         }
 
-        if ($db_connect) {
+        if (!$dry_run) {
     
             try { 
-                insert_value($name, $surname, $email);
-                echo "Inserted row: $name, $surname, $email.\n";
+                insert_value($first_name, $last_name, $email);
+                echo "Inserted row: $first_name, $last_name, $email.\n";
             }
             catch (PDOException $e) {
-                echo "DB insert failed: ".$e->getMessage();
+                echo "DB insert failed: ".$e->getMessage(),"\n";
             }
         } else {
 
-            echo "Valid row: $name, $surname, $email.\n";
+            echo "Valid row: $first_name, $last_name, $email.\n";
         }
     }
 
@@ -157,9 +150,18 @@ function process_csv($csvfile, $db_connect ) {
 
 }
 
-function upletter($match) {
+function clean_string($string) {
+
+    $string = trim($string);
+    $string = preg_replace("/[^a-z\s-]/i", "", $string);
+    $string = ucwords($string);
+    return $string;
+}
+
+function capitalize_letter($match) {
 
     return strtoupper("$match[0]");
 }
+
 
 ?>
