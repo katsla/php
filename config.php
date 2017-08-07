@@ -1,9 +1,12 @@
 <?php
 
-$dbhost = "localhost";
-$dbname = "Test";
-$dbuser = "root";
-$dbpsswd = "root";
+$db = [ 
+    "host" => "localhost",
+    "name" => "Test",
+    "user" => "root",
+    "psswd" => "root",
+];
+
 $csvfile = "users.csv";
 
 ?>
