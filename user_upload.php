@@ -74,7 +74,10 @@ Start script
 
 if ($new_table) {
 
-    create_table($db['host'], $db['name'], $db['user'], $db['psswd']);
+    create_table($connection["connect"]["host"], 
+                          $connection["connect"]["name"], 
+                          $connection["connect"]["user"], 
+                          $connection["connect"]["psswd"]);
     $con = null;
     exit("Table was created/rebuilt successfully.\n");
 }
