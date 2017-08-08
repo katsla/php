@@ -48,16 +48,15 @@ foreach (array_keys($opts) as $opt) switch ($opt) {
 
     case 'help':
         exit($help_message);
-    case 'create_table':
-        $new_table = true;
-        break;
     case 'file':
-        $csvfile = $opts['file'];
+        $csvfile = $opts['file'] ?? $csvfile;
     case 'dry_run':
         $connection = [ "dry_run" => true, "connect" => [] ];
         break;
+    case 'create_table':
+        $new_table = true;
     case 'h':
-        $connection["connect"]["host"] = $opts['h'];
+        $connection["connect"]["host"] = $opts["h"] ?? $connection["connect"]["host"];
     case 'n':
         $connection["connect"]["name"] = $opts['n'] ?? $connection["connect"]["name"];
     case "p":
