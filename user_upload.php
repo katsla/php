@@ -187,9 +187,11 @@ function process_csv_and_insert($csvfile, $connection ) {
                           $connection["connect"]["psswd"]);
     }
 
-    $row_num = 1;
+    $row_num = 0;
 
     while (($data = fgetcsv($handle)) !== FALSE ) {
+
+        $row_num++;
 
         $data = array_map('strtolower', $data);
 
@@ -213,7 +215,7 @@ function process_csv_and_insert($csvfile, $connection ) {
 
             echo "Valid row $row_num: $first_name, $last_name, $email.\n";
         }
-        $row_num++;
+        
     }
 
     fclose($handle);
